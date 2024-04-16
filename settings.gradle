@@ -1,0 +1,2 @@
+rootProject.name = "useRtsp0416"
+include ':app'
