@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
@@ -11,6 +12,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -76,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+
             }
 
             @Override
@@ -83,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+
 
 //        try {
 //            DealData();
@@ -154,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < extractor.getTrackCount(); i++) {
             format = extractor.getTrackFormat(i);
             String mime = format.getString(MediaFormat.KEY_MIME);
-            if (mime.startsWith("video/")) {
+            if (mime.startsWith("video/avc")) {
                 trackIndex = i;
                 extractor.selectTrack(trackIndex);
                 break;
@@ -191,9 +198,25 @@ public class MainActivity extends AppCompatActivity {
 
 
                 // 处理每一帧的数据
-                codec.releaseOutputBuffer(outputBufferIndex, false);
+//                codec.releaseOutputBuffer(outputBufferIndex, false);
+//
+//
+//                outputBuffer.rewind();
+//
+////                byteBuffer=outputBuffer;
+//
+//                final Bitmap bitmap = Bitmap.createBitmap(479,302, Bitmap.Config.ARGB_8888);
+//                outputBuffer.rewind();
+//                bitmap.copyPixelsFromBuffer(outputBuffer);
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        img.setImageBitmap(bitmap);
+//                    }
+//                });
 
-                byteBuffer=outputBuffer;
+
+
 
             }
         }
@@ -203,5 +226,29 @@ public class MainActivity extends AppCompatActivity {
         extractor.release();
 
     }
+
+
+
+    private void MediaCodec() throws IOException {
+
+
+//        MediaCodec codec = MediaCodec.createDecoderByType("video/avc");
+//        MediaFormat format = MediaFormat.createVideoFormat("video/avc", 409, 300);
+//        codec.configure(format, mSurfaceView.getHolder().getSurface()/* surface for output */, null /* crypto */, 0 /* flags */);
+//        codec.start();
+//
+//        int inputBufferIndex = codec.dequeueInputBuffer(timeout);
+//        if (inputBufferIndex >= 0) {
+//            ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
+//            inputBuffer.put(inputData);
+//            codec.queueInputBuffer(inputBufferIndex, 0, inputData.length, presentationTimeUs, 0);
+//        }
+
+
+
+    }
+
+
+
 
 }
