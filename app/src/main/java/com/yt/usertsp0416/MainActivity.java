@@ -12,6 +12,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -22,6 +23,8 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView img;
     private Bitmap mBitmap;
 
-    String rtsp ="rtsp://dbtqzh:admin123@192.168.36.65:554/stream/realtime?channel=1&streamtype=1";//"rtsp://192.168.36.192:8554";// "rtsp://dbtqzh:admin123@192.168.36.65:554/stream/realtime?channel=1&streamtype=1";
+    String rtsp ="rtsp://dbtqzh:admin123@192.168.30.82:554/stream/realtime?channel=1&streamtype=1";//"rtsp://192.168.36.192:8554";// "rtsp://dbtqzh:admin123@192.168.36.65:554/stream/realtime?channel=1&streamtype=1";
 
 
     @Override
@@ -87,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+//        extractFramesFromRTSP(rtsp);
+
 
 
 
@@ -248,6 +255,76 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    List<Bitmap> frames = new ArrayList<>();
+    /**
+     *
+     * 解析rtsp 视频流
+     *
+     * @param rtspUrl
+     * @return
+     */
+    public  List<Bitmap> extractFramesFromRTSP(String rtspUrl) {
+
+
+        try {
+            MediaExtractor extractor = new MediaExtractor();
+            extractor.setDataSource(rtspUrl);
+
+            for (int i = 0; i < extractor.getTrackCount(); i++) {
+                MediaFormat format = extractor.getTrackFormat(i);
+                String mime = format.getString(MediaFormat.KEY_MIME);
+                if (mime.startsWith("video/")) {
+                    extractor.selectTrack(i);
+                    MediaCodec codec = MediaCodec.createDecoderByType(mime);
+                    Surface surface = codec.createInputSurface();
+                    codec.configure(format, surface, null, 0);
+                    codec.start();
+
+                    // 解码并存储每一帧图片
+                    MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+                    boolean outputDone = false;
+                    while (!outputDone) {
+                        int inputIndex = codec.dequeueInputBuffer(-1);
+                        if (inputIndex >= 0) {
+                            int sampleSize = extractor.readSampleData(codec.getInputBuffer(inputIndex), 0);
+                            if (sampleSize < 0) {
+                                codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                                outputDone = true;
+                            } else {
+                                codec.queueInputBuffer(inputIndex, 0, sampleSize, extractor.getSampleTime(), 0);
+                                extractor.advance();
+                            }
+                        }
+
+                        int outputIndex = codec.dequeueOutputBuffer(info, 0);
+                        if (outputIndex >= 0) {
+                            ByteBuffer outputBuffer = codec.getOutputBuffer(outputIndex);
+                            Bitmap frame = Bitmap.createBitmap(format.getInteger(MediaFormat.KEY_WIDTH),
+                                    format.getInteger(MediaFormat.KEY_HEIGHT), Bitmap.Config.ARGB_8888);
+                            outputBuffer.rewind();
+                            frame.copyPixelsFromBuffer(outputBuffer);
+                            frames.add(frame);
+
+                            Log.i("MainActivity", "extractFramesFromRTSP: "+frames.size());
+
+                            codec.releaseOutputBuffer(outputIndex, true);
+                        }
+                    }
+
+                    codec.stop();
+                    codec.release();
+                    extractor.unselectTrack(i);
+                }
+            }
+
+            extractor.release();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return frames;
+    }
 
 
 
